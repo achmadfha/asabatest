@@ -4,6 +4,7 @@ import (
 	"BE-shop/models/dto/itemsDto"
 	"BE-shop/src/items"
 	"database/sql"
+	"errors"
 	"github.com/google/uuid"
 )
 
@@ -114,6 +115,99 @@ func (i itemsRepository) RetrieveAllItems(transactionType string) ([]itemsDto.It
 }
 
 func (i itemsRepository) RetrieveItemsByCode(code string) (itemsDto.Items, error) {
-	//TODO implement me
-	panic("implement me")
+	var item itemsDto.Items
+
+	query := `
+		SELECT i.items_id, i.code, i.name, i.amount, i.description, i.statusActive,
+			   ti.transaction_type, ti.created_at AS transaction_created_at
+		FROM items i
+		JOIN transaction_items ti ON i.code = ti.items_code
+		WHERE i.isdeleted = FALSE
+		  AND i.code = $1
+	`
+
+	row := i.db.QueryRow(query, code)
+	err := row.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return itemsDto.Items{}, errors.New("01")
+		}
+		return itemsDto.Items{}, err
+	}
+
+	return item, nil
+}
+
+func (i itemsRepository) UpdateItemsByCode(items itemsDto.ItemsUpdate) error {
+	tx, err := i.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	itemsQuery := `UPDATE
+	  items
+	SET
+	  amount = $1,
+	  statusActive = $2,
+	  updated_at = NOW()
+	WHERE
+	  code = $3`
+
+	_, err = tx.Exec(itemsQuery, items.Amount, items.StatusActive, items.Code)
+	if err != nil {
+		return err
+	}
+
+	transactionItemsQuery := `UPDATE
+	  transaction_items
+	SET
+	  quantity = $1,
+	  transaction_type = $2,
+	  updated_at = NOW()
+	WHERE
+	  items_code = $3`
+	_, err = tx.Exec(transactionItemsQuery, items.Amount, items.TransactionType, items.Code)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i itemsRepository) DeleteItemsByCode(code string) error {
+	tx, err := i.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	itemsQuery := `UPDATE
+	  items
+	SET
+	  isdeleted = TRUE,
+	  updated_at = NOW()
+	WHERE
+	  code = $1`
+
+	_, err = tx.Exec(itemsQuery, code)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

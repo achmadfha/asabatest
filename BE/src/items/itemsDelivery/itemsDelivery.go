@@ -22,6 +22,9 @@ func NewItemsDelivery(v1Group *gin.RouterGroup, itemsUC items.ItemsUseCase) {
 	{
 		itemsGroup.POST("", handler.CreateItem)
 		itemsGroup.GET("", handler.RetrieveAllItems)
+		itemsGroup.GET("/:code", handler.RetrieveItemsByCode)
+		itemsGroup.PUT("/:code", handler.UpdateItemsByCode)
+		itemsGroup.DELETE("/:code", handler.DeleteItemsByCode)
 	}
 }
 
@@ -57,4 +60,75 @@ func (it itemsDelivery) RetrieveAllItems(ctx *gin.Context) {
 	}
 
 	json.NewResponseSuccess(ctx, itemsData, nil, "Success Retrieve All Items", constants.ServiceCodeItems, constants.SuccessCode)
+}
+
+func (it itemsDelivery) RetrieveItemsByCode(ctx *gin.Context) {
+	code := ctx.Param("code")
+
+	itemsData, err := it.itemsUC.RetrieveItemsByCode(code)
+	if err != nil {
+		if err.Error() == "01" {
+			json.NewResponseForbidden(ctx, "items doesn't exist", constants.ServiceCodeItems, constants.Forbidden)
+			return
+		}
+		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
+		return
+	}
+
+	json.NewResponseSuccess(ctx, itemsData, nil, "Success Retrieve Items By Code", constants.ServiceCodeItems, constants.SuccessCode)
+}
+
+func (it itemsDelivery) UpdateItemsByCode(ctx *gin.Context) {
+	var req itemsDto.ItemsUpdate
+	code := ctx.Param("code")
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
+		return
+	}
+
+	itemsData := itemsDto.ItemsUpdate{
+		Code:            code,
+		Amount:          req.Amount,
+		StatusActive:    req.StatusActive,
+		TransactionType: req.TransactionType,
+	}
+
+	validationErr := validation.ValidationItemsUpdate(itemsData)
+	if len(validationErr) > 0 {
+		json.NewResponseBadRequest(ctx, validationErr, constants.BadReqMsg, constants.ServiceCodeItems, constants.GeneralErrCode)
+		return
+	}
+
+	data, err := it.itemsUC.UpdateItemsByCode(itemsData)
+	if err != nil {
+		if err.Error() == "01" {
+			json.NewResponseForbidden(ctx, "items doesn't exist", constants.ServiceCodeItems, constants.Forbidden)
+			return
+		}
+		if err.Error() == "02" {
+			json.NewResponseForbidden(ctx, "amount is not enough", constants.ServiceCodeItems, constants.Forbidden)
+			return
+		}
+		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
+		return
+	}
+
+	json.NewResponseSuccess(ctx, data, nil, "Success Update Items By Code", constants.ServiceCodeItems, constants.SuccessCode)
+}
+
+func (it itemsDelivery) DeleteItemsByCode(ctx *gin.Context) {
+	code := ctx.Param("code")
+
+	err := it.itemsUC.DeleteItemsByCode(code)
+	if err != nil {
+		if err.Error() == "01" {
+			json.NewResponseForbidden(ctx, "items doesn't exist", constants.ServiceCodeItems, constants.Forbidden)
+			return
+		}
+		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
+		return
+	}
+
+	json.NewResponseSuccess(ctx, nil, nil, "Success Delete Items By Code", constants.ServiceCodeItems, constants.SuccessCode)
 }

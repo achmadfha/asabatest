@@ -45,3 +45,23 @@ func ValidationItems(req itemsDto.ItemsRequest) []json.ValidationField {
 
 	return validationErrors
 }
+
+func ValidationItemsUpdate(req itemsDto.ItemsUpdate) []json.ValidationField {
+	var validationErrors []json.ValidationField
+
+	if req.StatusActive != true && req.StatusActive != false {
+		validationErrors = append(validationErrors, json.ValidationField{
+			FieldName: "status_active",
+			Message:   "StatusActive must be either true or false",
+		})
+	}
+
+	if req.TransactionType != "IN" && req.TransactionType != "OUT" {
+		validationErrors = append(validationErrors, json.ValidationField{
+			FieldName: "transaction_type",
+			Message:   "TransactionType must be either IN or OUT",
+		})
+	}
+
+	return validationErrors
+}
