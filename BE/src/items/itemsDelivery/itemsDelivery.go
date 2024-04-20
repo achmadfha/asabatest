@@ -4,6 +4,7 @@ import (
 	"BE-shop/models/constants"
 	"BE-shop/models/dto/itemsDto"
 	"BE-shop/models/dto/json"
+	"BE-shop/pkg/middleware"
 	"BE-shop/pkg/validation"
 	"BE-shop/src/items"
 	"github.com/gin-gonic/gin"
@@ -20,11 +21,11 @@ func NewItemsDelivery(v1Group *gin.RouterGroup, itemsUC items.ItemsUseCase) {
 
 	itemsGroup := v1Group.Group("/items")
 	{
-		itemsGroup.POST("", handler.CreateItem)
-		itemsGroup.GET("", handler.RetrieveAllItems)
-		itemsGroup.GET("/:code", handler.RetrieveItemsByCode)
-		itemsGroup.PUT("/:code", handler.UpdateItemsByCode)
-		itemsGroup.DELETE("/:code", handler.DeleteItemsByCode)
+		itemsGroup.POST("", middleware.JWTAuth("ADMIN"), handler.CreateItem)
+		itemsGroup.GET("", middleware.JWTAuth("ADMIN"), handler.RetrieveAllItems)
+		itemsGroup.GET("/:code", middleware.JWTAuth("ADMIN"), handler.RetrieveItemsByCode)
+		itemsGroup.PUT("/:code", middleware.JWTAuth("ADMIN"), handler.UpdateItemsByCode)
+		itemsGroup.DELETE("/:code", middleware.JWTAuth("ADMIN"), handler.DeleteItemsByCode)
 	}
 }
 
@@ -44,6 +45,10 @@ func (it itemsDelivery) CreateItem(ctx *gin.Context) {
 
 	items, err := it.itemsUC.CreateItem(req)
 	if err != nil {
+		if err.Error() == "01" {
+			json.NewResponseForbidden(ctx, "items already exist", constants.ServiceCodeItems, constants.Forbidden)
+			return
+		}
 		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
 		return
 	}

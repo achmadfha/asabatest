@@ -4,6 +4,7 @@ import (
 	"BE-shop/config"
 	"BE-shop/models/dto"
 	"BE-shop/pkg/middleware"
+	"BE-shop/pkg/utils"
 	"BE-shop/router"
 	"database/sql"
 	"errors"
@@ -108,7 +109,7 @@ func RunService() {
 		return
 	}
 
-	//utils.InitConfigData(configData)
+	utils.InitConfigData(configData)
 	middleware.InitConfigData(configData)
 
 	conn.SetConnMaxLifetime(duration)

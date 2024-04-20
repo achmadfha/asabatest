@@ -66,8 +66,7 @@ func JWTAuth(roles ...string) gin.HandlerFunc {
 		}
 
 		if !validRole {
-			err := fmt.Sprintf("Unauthorized. [%s]", err.Error())
-			json.NewResponseForbidden(c, err, constants.ServiceCodeJWT, constants.Unauthorized)
+			json.NewResponseForbidden(c, "Unauthorized. [Role]", constants.ServiceCodeJWT, constants.Unauthorized)
 			c.Abort()
 			return
 		}
