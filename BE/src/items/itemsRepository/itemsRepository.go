@@ -75,7 +75,7 @@ func (i itemsRepository) RetrieveAllItems(transactionType string) ([]itemsDto.It
 
 	query := `
         SELECT i.items_id, i.code, i.name, i.amount, i.description, i.statusActive,
-               ti.transaction_type, ti.created_at AS transaction_created_at
+               ti.transaction_type, ti.created_at, ti.updated_at AS transaction_created_at
         FROM items i
         JOIN transaction_items ti ON i.code = ti.items_code
         WHERE i.isdeleted = FALSE
@@ -100,7 +100,7 @@ func (i itemsRepository) RetrieveAllItems(transactionType string) ([]itemsDto.It
 
 	for rows.Next() {
 		var item itemsDto.Items
-		err = rows.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt)
+		err = rows.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt, &item.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func (i itemsRepository) RetrieveItemsByCode(code string) (itemsDto.Items, error
 
 	query := `
 		SELECT i.items_id, i.code, i.name, i.amount, i.description, i.statusActive,
-			   ti.transaction_type, ti.created_at AS transaction_created_at
+			   ti.transaction_type, ti.created_at, ti.updated_at AS transaction_created_at
 		FROM items i
 		JOIN transaction_items ti ON i.code = ti.items_code
 		WHERE i.isdeleted = FALSE
@@ -127,7 +127,7 @@ func (i itemsRepository) RetrieveItemsByCode(code string) (itemsDto.Items, error
 	`
 
 	row := i.db.QueryRow(query, code)
-	err := row.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt)
+	err := row.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return itemsDto.Items{}, errors.New("01")
