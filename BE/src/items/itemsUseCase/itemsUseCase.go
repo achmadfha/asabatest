@@ -22,14 +22,6 @@ func (i itemsUC) CreateItem(items itemsDto.ItemsRequest) (itemsDto.ItemsResponse
 		return itemsDto.ItemsResponse{}, err
 	}
 
-	_, err = i.itemsRepository.RetrieveItemsByCode(items.Code)
-	if err != nil {
-		if err.Error() == "01" {
-			return itemsDto.ItemsResponse{}, errors.New("01") // If item exists, return error 01
-		}
-		return itemsDto.ItemsResponse{}, err
-	}
-
 	trxType := "IN"
 	currentTime := time.Now()
 

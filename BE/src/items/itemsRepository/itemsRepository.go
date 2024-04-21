@@ -46,6 +46,9 @@ func (i itemsRepository) CreateItem(items itemsDto.Items) error {
 
 	_, err = tx.Exec(itemsQuery, items.ItemsID, items.Code, items.Name, items.Amount, items.Description, items.StatusActive, items.CreatedAt, items.UpdatedAt)
 	if err != nil {
+		if err.Error() == "pq: duplicate key value violates unique constraint \"items_code_key\"" {
+			return errors.New("01")
+		}
 		return err
 	}
 
