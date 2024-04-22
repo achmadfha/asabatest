@@ -129,8 +129,6 @@
           <el-table-column prop="updatedAt" label="Updated At" width="150" :formatter="formatDate"/>
           <el-table-column label="Operation" min-width="120px">
             <template #default="scope">
-              <el-button size="small" circle @click="showEditDialog = true; updatedItems = { ...scope.row }"
-                         :icon="Edit"/>
               <el-popover :visible="showDelete == scope.$index" placement="top" :width="180">
                 <template #reference>
                   <el-button size="small" type="danger" @click="showDelete = scope.$index" :icon="Delete" circle
@@ -187,6 +185,10 @@ const handleSelectionChange = (selected) => {
 };
 
 const editSelectedItems = () => {
+  if (selectedItems.value.length === 0) {
+    ElMessage.warning('Please select items to edit.');
+    return; // Exit the function if no items are selected
+  }
   additionalForms.value = [];
   selectedItems.value.forEach(item => {
     additionalForms.value.push({ ...item });
@@ -204,9 +206,7 @@ const newItems = ref({
 });
 
 const addAnotherItem = () => {
-  console.log('Adding another item...');
   showAdditionalForms.value = true;
-  console.log('showAdditionalForms:', showAdditionalForms.value);
   additionalForms.value.push({
     code: '',
     name: '',

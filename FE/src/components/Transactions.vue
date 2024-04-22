@@ -2,28 +2,58 @@
   <div class="w-full flex justify-center">
     <div class="flex flex-col w-full h-full px-[4rem] py-[2rem] space-y-[1rem]">
       <el-dialog v-model="showCreate" top="5vh" title="Add Transactions" width="50%">
-        <el-form ref="createFormRef" :model="newTransactions" label-position="top" label-width="auto">
-          <el-form-item label="Code" prop="code" required>
-            <el-input v-model="newTransactions.items_code" maxlength="10"/>
-            <span class="text-gray-400">Max 10 characters</span>
-          </el-form-item>
-          <el-form-item label="Amount" prop="amount" required>
-            <el-input-number v-model="newTransactions.quantity" controls-position="right" :min="0"/>
-            <span class="text-gray-400 ms-4">Quantity</span>
-          </el-form-item>
-          <el-form-item label="Transaction Type" prop="transaction_type" required>
-            <el-select v-model="newTransactions.transaction_type" placeholder="Select Transaction Type">
-              <el-option label="IN" value="IN"/>
-              <el-option label="OUT" value="OUT"/>
-            </el-select>
-            <span class="text-gray-400 ms-4">Transaction Type</span>
-          </el-form-item>
+        <el-form ref="createFormRef" label-position="top" label-width="auto">
+          <div v-for="(transaction, index) in newTransactions" :key="index">
+            <el-form-item label="Code" prop="code" required>
+              <el-input v-model="transaction.items_code" maxlength="10"/>
+              <span class="text-gray-400">Max 10 characters</span>
+            </el-form-item>
+            <el-form-item label="Amount" prop="amount" required>
+              <el-input-number v-model="transaction.quantity" controls-position="right" :min="0"/>
+              <span class="text-gray-400 ms-4">Quantity</span>
+            </el-form-item>
+            <el-form-item label="Transaction Type" prop="transaction_type" required>
+              <el-select v-model="transaction.transaction_type" placeholder="Select Transaction Type">
+                <el-option label="IN" value="IN"/>
+                <el-option label="OUT" value="OUT"/>
+              </el-select>
+              <span class="text-gray-400 ms-4">Transaction Type</span>
+            </el-form-item>
+          </div>
         </el-form>
         <template #footer>
-    <span class="dialog-footer">
-      <el-button type="primary" @click="createTransactions">Confirm</el-button>
-      <el-button @click="showCreate = false; resetForm()">Cancel</el-button>
-    </span>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="createTransactions">Confirm</el-button>
+            <el-button @click="addAnotherTransaction">+ Add More</el-button>
+            <el-button @click="showCreate = false; resetForm()">Cancel</el-button>
+          </span>
+        </template>
+      </el-dialog>
+
+      <el-dialog v-model="showEditDialog" top="5vh" title="Update Transaction" width="50%">
+        <template v-for="(transaction, index) in additionalTransactions" :key="index">
+          <el-form :ref="`updateTransactionFormRef${index}`" :model="transaction" label-position="top" label-width="auto">
+            <el-form-item label="Code" prop="items_code">
+              <el-input v-model="transaction.items_code" disabled/>
+            </el-form-item>
+            <el-form-item label="Amount" prop="quantity" required>
+              <el-input-number v-model="transaction.quantity" controls-position="right" :min="0"/>
+              <span class="text-gray-400 ms-4">Quantity</span>
+            </el-form-item>
+            <el-form-item label="Transaction Type" prop="transaction_type" required>
+              <el-select v-model="transaction.transaction_type" placeholder="Select Transaction Type">
+                <el-option label="IN" value="IN"/>
+                <el-option label="OUT" value="OUT"/>
+              </el-select>
+              <span class="text-gray-400 ms-4">Transaction Type</span>
+            </el-form-item>
+          </el-form>
+        </template>
+        <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="updateTransactions">Confirm</el-button>
+          <el-button @click="showEditDialog = false">Cancel</el-button>
+        </span>
         </template>
       </el-dialog>
 
@@ -53,9 +83,13 @@
             </el-input>
 
             <el-button type="primary" plain :icon="History" @click="showCreate = true">Create</el-button>
+            <el-button type="primary" plain :icon="Edit" @click="editSelectedItems">Edit Selected Transactions</el-button>
           </div>
         </template>
-        <el-table :data="paginatedTransactions" class="w-full max-h-full">
+        <el-table :data="paginatedTransactions" class="w-full max-h-full" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50">
+
+          </el-table-column>
           <el-table-column prop="items_code" label="Code"/>
           <el-table-column prop="quantity" label="Quantity"/>
           <el-table-column prop="transaction_type" label="Transaction Type">
@@ -115,19 +149,46 @@ const totalTransactions = computed(() => transactions.value.length);
 const selectedTransactionType = ref('All');
 const search = ref('');
 const showCreate = ref(false);
+const showEditDialog = ref(false);
+const additionalTransactions = ref([]);
+const selectedItems = ref([]);
 
-const newTransactions = ref({
+const editSelectedItems = () => {
+  if (selectedItems.value.length === 0) {
+    ElMessage.warning('Please select items to edit.');
+    return;
+  }
+
+  additionalTransactions.value = selectedItems.value.map(item => ({ ...item }));
+  showEditDialog.value = true;
+};
+
+
+const handleSelectionChange = (selected) => {
+  selectedItems.value = selected;
+};
+
+
+const newTransactions = ref([{
   items_code: '',
   quantity: 0,
   transaction_type: ''
-});
+}]);
 
 const resetForm = () => {
-  newTransactions.value = {
+  newTransactions.value = [{
     items_code: '',
     quantity: 0,
     transaction_type: ''
-  };
+  }];
+};
+
+const addAnotherTransaction = () => {
+  newTransactions.value.push({
+    items_code: '',
+    quantity: 0,
+    transaction_type: ''
+  });
 };
 
 const fetchTransactions = async (transactionType) => {
@@ -191,30 +252,33 @@ const createTransactions = async () => {
       throw new Error('Access token not found.');
     }
 
-    const response = await axios.post('/api/v1/transaction', newTransactions.value, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    for (const transaction of newTransactions.value) {
+      const response = await axios.post('/api/v1/transaction', transaction, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
-    if (response.data.responseCode === '2000300') {
-      ElMessage({
-        message: 'Success Create Transaction',
-        type: 'success',
-      });
-      fetchTransactions();
-      showCreate.value = false;
-      resetForm();
-    } else {
-      ElMessage({
-        message: response.data.responseMessage,
-        type: 'error',
-      });
+      if (response.data.responseCode === '2000300') {
+        ElMessage({
+          message: 'Success Create Transaction',
+          type: 'success',
+        });
+      } else {
+        ElMessage({
+          message: response.data.responseMessage,
+          type: 'error',
+        });
+      }
     }
-  } catch (e) {
-    if (e.response.data.responseCode === '4030303') {
+
+    fetchTransactions();
+    showCreate.value = false;
+    resetForm();
+  } catch (error) {
+    if (error.response && error.response.data.responseCode === '4030303') {
       ElMessage({
-        message: e.response.data.responseMessage,
+        message: error.response.data.responseMessage,
         type: 'error',
       });
     } else {
@@ -223,6 +287,7 @@ const createTransactions = async () => {
         type: 'error',
       });
     }
+    fetchTransactions();
     showCreate.value = false;
     resetForm();
   }
