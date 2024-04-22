@@ -24,47 +24,76 @@
             <span class="text-gray-400 ms-4">Status active (True/False)</span>
           </el-form-item>
         </el-form>
+        <template v-if="showAdditionalForms">
+          <template v-for="(form, index) in additionalForms" :key="index">
+            <el-form ref="additionalFormRef" :model="form" label-position="top" label-width="auto">
+              <el-form-item label="Code" prop="code" required>
+                <el-input v-model="form.code" maxlength="10"/>
+                <span class="text-gray-400">Max 10 characters</span>
+              </el-form-item>
+              <el-form-item label="Name" prop="name" required>
+                <el-input v-model="form.name"/>
+                <span class="text-gray-400">Items Name</span>
+              </el-form-item>
+              <el-form-item label="Amount" prop="amount" required>
+                <el-input-number v-model="form.amount" controls-position="right" :min="0"/>
+                <span class="text-gray-400 ms-4">Items Amount</span>
+              </el-form-item>
+              <el-form-item label="Description" prop="description" required>
+                <el-input v-model="form.description" type="textarea"/>
+                <span class="text-gray-400">The item describe information</span>
+              </el-form-item>
+              <el-form-item label="Active" prop="status_active" required>
+                <el-switch v-model="form.status_active" active-text="True" inactive-text="False"/>
+                <span class="text-gray-400 ms-4">Status active (True/False)</span>
+              </el-form-item>
+            </el-form>
+          </template>
+        </template>
         <template #footer>
-    <span class="dialog-footer">
-      <el-button type="primary" @click="createItems">Confirm</el-button>
-      <el-button @click="showCreate = false">Cancel</el-button>
-    </span>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="createItems">Confirm</el-button>
+            <el-button @click="addAnotherItem">+ Add More</el-button>
+            <el-button @click="showCreate = false; resetForm()">Cancel</el-button>
+          </span>
         </template>
       </el-dialog>
 
       <el-dialog v-model="showEditDialog" top="5vh" title="Update Item" width="50%">
-        <el-form ref="updateFormRef" :model="updatedItems" label-position="top" label-width="auto">
-          <el-form-item label="Code" prop="code">
-            <el-input v-model="updatedItems.code" disabled/>
-          </el-form-item>
-          <el-form-item label="Name" prop="name">
-            <el-input v-model="updatedItems.name" disabled/>
-          </el-form-item>
-          <el-form-item label="Amount" prop="amount" required>
-            <el-input-number v-model="updatedItems.amount" controls-position="right" :min="0"/>
-            <span class="text-gray-400 ms-4">Items Amount</span>
-          </el-form-item>
-          <el-form-item label="Description" prop="description">
-            <el-input v-model="updatedItems.description" disabled type="textarea"/>
-            <span class="text-gray-400">The item describe information</span>
-          </el-form-item>
-          <el-form-item label="Active" prop="status_active" required>
-            <el-switch v-model="updatedItems.status_active" active-text="True" inactive-text="False"/>
-            <span class="text-gray-400 ms-4">Status active (True/False)</span>
-          </el-form-item>
-          <el-form-item label="Transaction Type" prop="transaction_type" required>
-            <el-select v-model="updatedItems.transaction_type" placeholder="Select Transaction Type">
-              <el-option label="IN" value="IN"/>
-              <el-option label="OUT" value="OUT"/>
-            </el-select>
-            <span class="text-gray-400 ms-4">Transaction Type</span>
-          </el-form-item>
-        </el-form>
+        <template v-for="(form, index) in additionalForms" :key="index">
+          <el-form :ref="`updateFormRef${index}`" :model="form" label-position="top" label-width="auto">
+            <el-form-item label="Code" prop="code">
+              <el-input v-model="form.code" disabled/>
+            </el-form-item>
+            <el-form-item label="Name" prop="name">
+              <el-input v-model="form.name" disabled/>
+            </el-form-item>
+            <el-form-item label="Amount" prop="amount" required>
+              <el-input-number v-model="form.amount" controls-position="right" :min="0"/>
+              <span class="text-gray-400 ms-4">Items Amount</span>
+            </el-form-item>
+            <el-form-item label="Description" prop="description">
+              <el-input v-model="form.description" disabled type="textarea"/>
+              <span class="text-gray-400">The item describe information</span>
+            </el-form-item>
+            <el-form-item label="Active" prop="status_active" required>
+              <el-switch v-model="form.status_active" active-text="True" inactive-text="False"/>
+              <span class="text-gray-400 ms-4">Status active (True/False)</span>
+            </el-form-item>
+            <el-form-item label="Transaction Type" prop="transaction_type" required>
+              <el-select v-model="form.transaction_type" placeholder="Select Transaction Type">
+                <el-option label="IN" value="IN"/>
+                <el-option label="OUT" value="OUT"/>
+              </el-select>
+              <span class="text-gray-400 ms-4">Transaction Type</span>
+            </el-form-item>
+          </el-form>
+        </template>
         <template #footer>
-      <span class="dialog-footer">
-        <el-button type="primary" @click="updateItems">Confirm</el-button>
-        <el-button @click="showEditDialog = false">Cancel</el-button>
-      </span>
+    <span class="dialog-footer">
+      <el-button type="primary" @click="updateItems">Confirm</el-button>
+      <el-button @click="showEditDialog = false">Cancel</el-button>
+    </span>
         </template>
       </el-dialog>
 
@@ -85,11 +114,12 @@
                 </el-icon>
               </template>
             </el-input>
-
             <el-button type="primary" plain :icon="ApplicationTwo" @click="showCreate = true">Create</el-button>
+            <el-button type="primary" plain :icon="Edit" @click="editSelectedItems">Edit Selected Items</el-button>
           </div>
         </template>
-        <el-table :data="paginatedItems" class="w-full max-h-full">
+        <el-table :data="paginatedItems" class="w-full max-h-full" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50"></el-table-column>
           <el-table-column prop="code" label="Code" width="150"/>
           <el-table-column prop="name" label="Name" width="150"/>
           <el-table-column prop="amount" label="Amount" width="100"/>
@@ -99,7 +129,8 @@
           <el-table-column prop="updatedAt" label="Updated At" width="150" :formatter="formatDate"/>
           <el-table-column label="Operation" min-width="120px">
             <template #default="scope">
-              <el-button size="small" circle @click="showEditDialog = true; updatedItems = { ...scope.row }" :icon="Edit"/>
+              <el-button size="small" circle @click="showEditDialog = true; updatedItems = { ...scope.row }"
+                         :icon="Edit"/>
               <el-popover :visible="showDelete == scope.$index" placement="top" :width="180">
                 <template #reference>
                   <el-button size="small" type="danger" @click="showDelete = scope.$index" :icon="Delete" circle
@@ -150,6 +181,22 @@ let allItems = ref([]);
 const showCreate = ref(false);
 const showEditDialog = ref(false);
 const updatedItems = ref({});
+const showAdditionalForms = ref(false);
+const additionalForms = ref([]);
+const selectedItems = ref([]);
+
+const handleSelectionChange = (selected) => {
+  selectedItems.value = selected;
+};
+
+const editSelectedItems = () => {
+  additionalForms.value = [];
+  selectedItems.value.forEach(item => {
+    additionalForms.value.push({ ...item });
+  });
+
+  showEditDialog.value = true;
+};
 
 const newItems = ref({
   code: '',
@@ -159,17 +206,29 @@ const newItems = ref({
   status_active: true,
 });
 
-const showEdit = (row) => {
-  console.log('Editing row:', row);
-  updatedItems.value = {
-    code: row.code,
-    name: row.name,
-    amount: row.amount,
-    description: row.description,
-    status_active: row.status_active,
-    transaction_type: row.transaction_type,
+const addAnotherItem = () => {
+  console.log('Adding another item...');
+  showAdditionalForms.value = true;
+  console.log('showAdditionalForms:', showAdditionalForms.value);
+  additionalForms.value.push({
+    code: '',
+    name: '',
+    amount: 0,
+    description: '',
+    status_active: true,
+  });
+};
+
+const resetForm = () => {
+  showAdditionalForms.value = false;
+  additionalForms.value = [];
+  newItems.value = {
+    code: '',
+    name: '',
+    amount: 0,
+    description: '',
+    status_active: true,
   };
-  showEditDialog.value = true;
 };
 
 onMounted(async () => {
@@ -233,20 +292,40 @@ const createItems = async () => {
       throw new Error('Access token not found.');
     }
 
-    const response = await axios.post('/api/v1/items', newItems.value, {
+    const mainFormResponse = await axios.post('/api/v1/items', newItems.value, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
 
-    if (response.data.responseCode === '2000200') {
+    if (mainFormResponse.data.responseCode === '2000200') {
       ElMessage({
-        message: 'Success Create Items',
+        message: 'Success Create Main Items',
         type: 'success',
       });
-      showCreate.value = false;
-      fetchItems();
     }
+
+    const additionalFormResponses = await Promise.all(
+        additionalForms.value.map(async (form) => {
+          return await axios.post('/api/v1/items', form, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+        })
+    );
+
+    additionalFormResponses.forEach((response, index) => {
+      if (response.data.responseCode === '2000200') {
+        ElMessage({
+          message: `Success Create Additional Form ${index + 1}`,
+          type: 'success',
+        });
+      }
+    });
+
+    fetchItems();
+    showCreate.value = false;
   } catch (e) {
     if (e.response.data.responseCode === '4030203') {
       ElMessage({
@@ -262,31 +341,35 @@ const createItems = async () => {
   }
 };
 
-const updateItems = async (row) => {
+const updateItems = async () => {
   try {
     const accessToken = getAccessToken();
     if (!accessToken) {
       throw new Error('Access token not found.');
     }
 
-    const response = await axios.put(`/api/v1/items/${updatedItems.value.code}`, {
-      amount: updatedItems.value.amount,
-      status_active: updatedItems.value.status_active,
-      transaction_type: updatedItems.value.transaction_type,
-    }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.data.responseCode === '2000200') {
-      ElMessage({
-        message: 'Success Update Item',
-        type: 'success',
+    for (const form of additionalForms.value) {
+      const response = await axios.put(`/api/v1/items/${form.code}`, form, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-      showEditDialog.value = false;
-      fetchItems();
+
+      if (response.data.responseCode === '2000200') {
+        ElMessage({
+          message: `Success Update Item ${form.code}`,
+          type: 'success',
+        });
+      } else {
+        ElMessage({
+          message: response.data.responseMessage,
+          type: 'error',
+        });
+      }
     }
+
+    fetchItems();
+    showEditDialog.value = false;
   } catch (e) {
     if (e.response.data.responseCode === '4030203') {
       ElMessage({
@@ -295,7 +378,7 @@ const updateItems = async (row) => {
       });
     } else {
       ElMessage({
-        message: 'An error occurred while creating items.',
+        message: 'An error occurred while updating items.',
         type: 'error',
       });
     }
