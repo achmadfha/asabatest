@@ -56,10 +56,10 @@ func (i itemsUC) CreateItem(items itemsDto.ItemsRequest) (itemsDto.ItemsResponse
 	return itemsResponse, nil
 }
 
-func (i itemsUC) RetrieveAllItems(transactionType string) ([]itemsDto.Items, error) {
-	itemsData, err := i.itemsRepository.RetrieveAllItems(transactionType)
+func (i itemsUC) RetrieveAllItems() ([]itemsDto.ItemsResponse, error) {
+	itemsData, err := i.itemsRepository.RetrieveAllItems()
 	if err != nil {
-		return []itemsDto.Items{}, err
+		return []itemsDto.ItemsResponse{}, err
 	}
 
 	return itemsData, nil

@@ -73,45 +73,28 @@ func (i itemsRepository) CreateItem(items itemsDto.Items) error {
 	return nil
 }
 
-func (i itemsRepository) RetrieveAllItems(transactionType string) ([]itemsDto.Items, error) {
-	var items []itemsDto.Items
+func (i itemsRepository) RetrieveAllItems() ([]itemsDto.ItemsResponse, error) {
+	var items []itemsDto.ItemsResponse
 
 	query := `
-        SELECT i.items_id, i.code, i.name, i.amount, i.description, i.statusActive,
-               ti.transaction_type, ti.created_at, ti.updated_at AS transaction_created_at
-        FROM items i
-        JOIN transaction_items ti ON i.code = ti.items_code
-        WHERE i.isdeleted = FALSE
+        SELECT items_id, code, name, amount, description, statusActive, created_at, updated_at
+		FROM items
+		WHERE isdeleted = FALSE
     `
-
-	var rows *sql.Rows
-	var err error
-
-	if transactionType != "" {
-		query += " AND ti.transaction_type = $1"
-		query += " ORDER BY ti.transaction_type;"
-		rows, err = i.db.Query(query, transactionType)
-	} else {
-		query += " ORDER BY ti.transaction_type;"
-		rows, err = i.db.Query(query)
-	}
-
+	rows, err := i.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
-		var item itemsDto.Items
-		err = rows.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt, &item.UpdatedAt)
+		var item itemsDto.ItemsResponse
+		err := rows.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.CreatedAt, &item.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 		items = append(items, item)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 
 	return items, nil

@@ -90,3 +90,51 @@ func (t trxItemsUC) DeleteTrxItems(trxID string) error {
 
 	return nil
 }
+
+func (t trxItemsUC) RetrieveTrxItemsByID(trxID string) (trxItemsDto.TrxItemsRes, error) {
+	trxItemsData, err := t.trxItemsRepo.RetrieveTrxItemsByID(trxID)
+	if err != nil {
+		if err.Error() == "01" {
+			return trxItemsDto.TrxItemsRes{}, errors.New("01")
+		}
+		return trxItemsDto.TrxItemsRes{}, err
+	}
+
+	return trxItemsData, nil
+}
+
+func (t trxItemsUC) UpdateTrxItems(items trxItemsDto.TrxItemsUpdateReq) error {
+	itemsData, err := t.items.RetrieveItemsByCode(items.ItemCode)
+	if err != nil {
+		if err.Error() == "01" {
+			return errors.New("01")
+		}
+		return err
+	}
+
+	if items.Quantity > itemsData.Amount {
+		return errors.New("02")
+	}
+
+	var finalAmount int
+	if items.TransactionType == "IN" {
+		finalAmount = itemsData.Amount + items.Quantity
+	} else if items.TransactionType == "OUT" {
+		finalAmount = itemsData.Amount - items.Quantity
+	}
+
+	trxUpdate := trxItemsDto.TrxUpdateReq{
+		TrxID:    items.TrxID,
+		ItemCode: items.ItemCode,
+		TrxType:  items.TransactionType,
+		Quantity: items.Quantity,
+		Amount:   finalAmount,
+	}
+
+	err = t.trxItemsRepo.UpdateTrxItemsByID(trxUpdate)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

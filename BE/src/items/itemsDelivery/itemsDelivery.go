@@ -57,8 +57,7 @@ func (it itemsDelivery) CreateItem(ctx *gin.Context) {
 }
 
 func (it itemsDelivery) RetrieveAllItems(ctx *gin.Context) {
-	transactionType := ctx.Query("transactionsType")
-	itemsData, err := it.itemsUC.RetrieveAllItems(transactionType)
+	itemsData, err := it.itemsUC.RetrieveAllItems()
 	if err != nil {
 		json.NewResponseError(ctx, err.Error(), constants.ServiceCodeItems, constants.GeneralErrCode)
 		return

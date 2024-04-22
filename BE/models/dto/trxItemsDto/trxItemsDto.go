@@ -30,4 +30,19 @@ type (
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
+
+	TrxUpdateReq struct {
+		TrxID    uuid.UUID `json:"transaction_id"`
+		ItemCode string    `json:"items_code"`
+		TrxType  string    `json:"transaction_type"`
+		Quantity int       `json:"quantity"`
+		Amount   int       `json:"amount"`
+	}
+
+	TrxItemsUpdateReq struct {
+		TrxID           uuid.UUID `json:"transaction_id"`
+		ItemCode        string    `json:"items_code"`
+		TransactionType string    `json:"transaction_type"`
+		Quantity        int       `json:"quantity"`
+	}
 )
