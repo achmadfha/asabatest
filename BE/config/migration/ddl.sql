@@ -30,7 +30,7 @@ CREATE TABLE transaction_items
     items_code       VARCHAR(10)      NOT NULL,
     transaction_type transaction_type NOT NULL,
     quantity         INT              NOT NULL,
+    isDeleted    BOOLEAN   DEFAULT FALSE,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (items_code) REFERENCES items (code)
 );

@@ -121,16 +121,14 @@ func (i itemsRepository) RetrieveItemsByCode(code string) (itemsDto.Items, error
 	var item itemsDto.Items
 
 	query := `
-		SELECT i.items_id, i.code, i.name, i.amount, i.description, i.statusActive,
-			   ti.transaction_type, ti.created_at, ti.updated_at AS transaction_created_at
-		FROM items i
-		JOIN transaction_items ti ON i.code = ti.items_code
-		WHERE i.isdeleted = FALSE
-		  AND i.code = $1
+		SELECT items_id, code, name, amount, description, statusActive, created_at, updated_at
+		FROM items
+		WHERE isdeleted = FALSE
+		  AND code = $1
 	`
 
 	row := i.db.QueryRow(query, code)
-	err := row.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.TransactionType, &item.CreatedAt, &item.UpdatedAt)
+	err := row.Scan(&item.ItemsID, &item.Code, &item.Name, &item.Amount, &item.Description, &item.StatusActive, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return itemsDto.Items{}, errors.New("01")

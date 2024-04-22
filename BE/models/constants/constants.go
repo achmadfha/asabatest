@@ -11,6 +11,7 @@ const (
 	ServiceCodeJWT   = "00"
 	ServiceCodeAuth  = "01"
 	ServiceCodeItems = "02"
+	ServiceCodeTrx   = "03"
 
 	// utils
 	DefaultRole = "USER"

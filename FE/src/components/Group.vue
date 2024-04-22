@@ -78,13 +78,6 @@
       <el-card class="w-full h-max">
         <template #header>
           <div class="flex w-full space-x-[2rem]">
-            <el-select class="w-1/3" v-model="selectedTransactionType" filterable placeholder="Select Transaction Type"
-                       @change="filterItems">
-              <el-option label="All" value=""/>
-              <el-option label="IN" value="IN"/>
-              <el-option label="OUT" value="OUT"/>
-            </el-select>
-
             <el-input v-model="search" placeholder="Type to search">
               <template #prefix>
                 <el-icon>
@@ -102,13 +95,6 @@
           <el-table-column prop="amount" label="Amount" width="100"/>
           <el-table-column prop="description" label="Description" min-width="200" show-overflow-tooltip/>
           <el-table-column prop="status_active" label="Active" width="100" :formatter="formatActiveStatus"/>
-          <el-table-column prop="transaction_type" label="Transaction Type" width="150">
-            <template #default="scope">
-              <el-tag :type="scope.row.transaction_type === 'IN' ? 'success' : 'danger'">
-                {{ scope.row.transaction_type }}
-              </el-tag>
-            </template>
-          </el-table-column>
           <el-table-column prop="createdAt" label="Created At" width="150" :formatter="formatDate"/>
           <el-table-column prop="updatedAt" label="Updated At" width="150" :formatter="formatDate"/>
           <el-table-column label="Operation" min-width="120px">
@@ -157,7 +143,6 @@ import axios from "axios";
 const items = ref([]);
 const showDelete = ref(-1);
 const search = ref('');
-const selectedTransactionType = ref('');
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalItems = computed(() => items.value.length);
@@ -199,10 +184,6 @@ const fetchItems = async () => {
     }
 
     let url = '/api/v1/items';
-    if (selectedTransactionType.value) {
-      url += `?transactionsType=${selectedTransactionType.value}`;
-    }
-
     const response = await request.get(url, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
