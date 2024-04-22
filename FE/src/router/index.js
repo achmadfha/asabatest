@@ -19,6 +19,11 @@ const routes = [
         component: () => import("views/items/Items.vue")
       },
       {
+        path: '/transactions',
+        name: 'Transactions',
+        component: () => import("views/transactions/Transactions.vue")
+      },
+      {
         path: '/404',
         name: '404',
         component: () => import('views/others/404.vue')

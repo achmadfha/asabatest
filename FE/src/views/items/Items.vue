@@ -1,5 +1,5 @@
 <template>
-  <Group listAll />
+  <Group />
 </template>
 
 <script setup>

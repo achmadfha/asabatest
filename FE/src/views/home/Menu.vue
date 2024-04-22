@@ -15,7 +15,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { DashboardCar, ApplicationTwo } from '@icon-park/vue-next';
+import { DashboardCar, ApplicationTwo, History } from '@icon-park/vue-next';
 
 const isCollapse = ref(false);
 
@@ -29,6 +29,11 @@ const menuList = [
     name: '/items',
     icon: ApplicationTwo,
     title: 'Items',
+  },
+  {
+    name: '/transactions',
+    icon: History,
+    title: 'Transactions',
   }
 ]
 

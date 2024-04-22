@@ -159,9 +159,6 @@
   </div>
 </template>
 
-<style scoped>
-</style>
-
 <script setup>
 import {Edit, Delete, ApplicationTwo, Search} from '@icon-park/vue-next';
 import {ref, computed, onMounted, watch} from 'vue';
